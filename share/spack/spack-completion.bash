@@ -333,7 +333,7 @@ _spack() {
     then
         SPACK_COMPREPLY="-h --help -H --all-help --color -C --config-scope -d --debug --timestamp --pdb -e --env -D --env-dir -E --no-env --use-env-repo -k --insecure -l --enable-locks -L --disable-locks -m --mock -p --profile --sorted-profile --lines -v --verbose --stacktrace -V --version --print-shell-vars"
     else
-        SPACK_COMPREPLY="activate add arch blame build-env buildcache cd checksum ci clean clone commands compiler compilers concretize config containerize create deactivate debug dependencies dependents deprecate dev-build develop docs edit env extensions external fetch find flake8 gc gpg graph help info install license list load location log-parse maintainers mark mirror module patch pkg providers pydoc python reindex remove rm repo resource restage solve spec stage style test test-env tutorial undevelop uninstall unit-test unload url verify versions view"
+        SPACK_COMPREPLY="activate add arch blame build-env buildcache cd checksum ci clean clone commands compiler compilers concretize config containerize create deactivate debug dependencies dependents deprecate dev-build develop docs edit env extensions external fetch find flake8 gc gpg graph help info install license list load location log-parse maintainers mark mirror module patch pkg providers pydoc python reindex remove rm repo resource restage solve spec splat stage style test test-env tutorial undevelop uninstall unit-test unload url verify versions view"
     fi
 }
 
@@ -1385,7 +1385,7 @@ _spack_pydoc() {
 _spack_python() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -V --version -c -i -m"
+        SPACK_COMPREPLY="-h --help -V --version -c -i -m --path"
     else
         SPACK_COMPREPLY=""
     fi
@@ -1509,6 +1509,47 @@ _spack_spec() {
     else
         _all_packages
     fi
+}
+
+_spack_splat() {
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help"
+    else
+        SPACK_COMPREPLY="dependency_conditions dependency_conditions_no_version_no_variant dependency_constraints deptypes variant_names variant_defaults variant_values variant_names_values"
+    fi
+}
+
+_spack_splat_dependency_conditions() {
+    SPACK_COMPREPLY="-h --help"
+}
+
+_spack_splat_dependency_conditions_no_version_no_variant() {
+    SPACK_COMPREPLY="-h --help"
+}
+
+_spack_splat_dependency_constraints() {
+    SPACK_COMPREPLY="-h --help"
+}
+
+_spack_splat_deptypes() {
+    SPACK_COMPREPLY="-h --help"
+}
+
+_spack_splat_variant_names() {
+    SPACK_COMPREPLY="-h --help"
+}
+
+_spack_splat_variant_defaults() {
+    SPACK_COMPREPLY="-h --help"
+}
+
+_spack_splat_variant_values() {
+    SPACK_COMPREPLY="-h --help"
+}
+
+_spack_splat_variant_names_values() {
+    SPACK_COMPREPLY="-h --help"
 }
 
 _spack_stage() {
