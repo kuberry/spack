@@ -55,7 +55,10 @@ class Xyce(CMakePackage):
         trilinos = spec['trilinos']
 
         cxx_flags = [self.compiler.cxx_pic_flag]
-        cxx_flags.append(self.compiler.cxx11_flag)
+        try:
+            cxx_flags.append(self.compiler.cxx11_flag)
+        except:
+            pass
         cxx_flags.append("-DXyce_INTRUSIVE_PCE -Wreorder -O3")
 
         options = []
