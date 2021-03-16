@@ -17,12 +17,16 @@ class Xyce(CMakePackage):
     """
 
     homepage = 'https://xyce.sandia.gov'
-    git      = 'https://github.com/Xyce/Xyce.git'
-    url      = 'https://github.com/Xyce/Xyce/archive/Release-7.2.0.tar.gz'
+    #git      = 'https://github.com/Xyce/Xyce.git'
+    git      = 'git@gitlab-ex.sandia.gov:pakuber/Xyce.git'#https://gitlab-ex.sandia.gov/pakuber/Xyce.git'
+    #url      = 'https://github.com/Xyce/Xyce/archive/Release-7.2.0.tar.gz'
+    url      = 'https://gitlab-ex.sandia.gov/pakuber/Xyce/-/archive/release-7.2/Xyce-release-7.2.tar.gz'
+    #url      = 'https://gitlab-ex.sandia.gov/pakuber/Xyce/-/archive/develop/Xyce-develop.tar.gz'
     maintainers = ['Karlsefni2012','tvrusso','peshola','hkthorn','kuberry']
 
-    version('master',  branch='master')
-    version('7.2.0', 'cf49705278ecda46373784bb24925cb97f9017b6adff49e4416de146bdd6a4b5')
+    version('develop',  branch='develop', preferred=True)
+    #version('master',  branch='master')
+    #version('7.2.0', 'cf49705278ecda46373784bb24925cb97f9017b6adff49e4416de146bdd6a4b5')
 
     depends_on('cmake@3.13:', type='build')
     depends_on('flex')
@@ -34,6 +38,13 @@ class Xyce(CMakePackage):
 
     variant('mpi', default=True, description='Enable MPI support')
     depends_on('mpi', when='+mpi')
+
+    variant('pymi', default=False, description='Enable Python Model Interpreter for Xyce')
+    depends_on('python@3:', type=('build', 'link', 'run'), when='+pymi')
+    depends_on('py-pip', type='run', when='+pymi')
+    depends_on('py-setuptools', type='build', when='+pymi')
+    depends_on('py-numpy', type=('build', 'run'), when='+pymi')
+    depends_on('py-pybind11@2.6.1:', when='+pymi')
 
     depends_on('trilinos@12.12.1~adios2~alloptpkgs+amesos+amesos2+anasazi+aztec+belos~boost~cgns~chaco+complex~cuda~cuda_rdc~debug~dtk+epetra+epetraext~exodus+explicit_template_instantiation~float+fortran~glm~gtest+hdf5~hwloc~hypre+ifpack~ifpack2~intrepid~intrepid2~ipo+isorropia+kokkos~matio~mesquite~metis~minitensor~ml+mpi~muelu~mumps~netcdf+nox~openmp~phalanx~piro~pnetcdf~python~rol~rythmos+sacado~shards~shared~shylu~stk~stratimikos~strumpack+suite-sparse~superlu~superlu-dist~teko~tempus+teuchos+tpetra+trilinoscouplings~wrapper~x11~xsdkflags~zlib+zoltan~zoltan2+stokhos+amesos2basker+epetraextbtf+epetraextexperimental+epetraextgraphreorderings gotype=\'none\'', when="+mpi")
     depends_on('trilinos@12.12.1~adios2~alloptpkgs+amesos+amesos2+anasazi+aztec+belos~boost~cgns~chaco+complex~cuda~cuda_rdc~debug~dtk+epetra+epetraext~exodus+explicit_template_instantiation~float+fortran~glm~gtest+hdf5~hwloc~hypre+ifpack~ifpack2~intrepid~intrepid2~ipo+isorropia+kokkos~matio~mesquite~metis~minitensor~ml~mpi~muelu~mumps~netcdf+nox~openmp~phalanx~piro~pnetcdf~python~rol~rythmos+sacado~shards~shared~shylu~stk~stratimikos~strumpack+suite-sparse~superlu~superlu-dist~teko~tempus+teuchos+tpetra+trilinoscouplings~wrapper~x11~xsdkflags~zlib+zoltan~zoltan2+stokhos+amesos2basker+epetraextbtf+epetraextexperimental+epetraextgraphreorderings gotype=\'none\'', when="~mpi")
@@ -62,5 +73,14 @@ class Xyce(CMakePackage):
             options.append('-DBUILD_SHARED_LIBS:BOOL=ON')
         else:
             options.append('-DBUILD_SHARED_LIBS:BOOL=OFF')
+
+        if '+pymi' in spec:
+            pybind11 = spec['py-pybind11']
+            python   = spec['python']
+            
+            options.append('-DXyce_PYMI:BOOL=ON')
+            options.append('-Dpybind11_DIR:PATH={0}'.format(pybind11.prefix))
+            options.append('-DPython_ROOT_DIR:FILEPATH={0}'.format(python.prefix))
+            options.append('-DPython_FIND_STRATEGY=LOCATION')
 
         return options
