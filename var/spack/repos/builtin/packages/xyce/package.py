@@ -57,7 +57,7 @@ class Xyce(CMakePackage):
         cxx_flags = [self.compiler.cxx_pic_flag]
         try:
             cxx_flags.append(self.compiler.cxx11_flag)
-        except:
+        except ValueError:
             pass
         cxx_flags.append("-DXyce_INTRUSIVE_PCE -Wreorder -O3")
 
