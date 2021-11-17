@@ -1,0 +1,41 @@
+name: build tests
+
+on: 
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'branch'
+        required: true
+        default: 'master'
+        
+jobs:
+  build:
+    name: Build ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: ['ubuntu-latest', 'macos-latest']
+        
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        ref: ${{ github.event.inputs.branch }}
+    
+    - name: Setup python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.7'
+        architecture: x64
+      
+    - name: Install Python dependencies
+      run: |
+        python3 -m pip install --upgrade pip
+        
+    - name: Source Spack
+      run: |
+          . share/spack/setup-env.sh
+                 
+    - name: Install Xyce-PyMi
+      run: |
+          spack -d -v -k install xyce+pymi
+          
