@@ -33,9 +33,8 @@ jobs:
         
     - name: Source Spack
       run: |
+          ls
           . share/spack/setup-env.sh
-                 
-    - name: Install Xyce-PyMi
-      run: |
           spack -d -v -k install xyce+pymi
+          
           
