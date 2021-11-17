@@ -3,10 +3,14 @@ name: build tests
 on: 
   workflow_dispatch:
     inputs:
-      branch:
-        description: 'branch'
+      repo:
+        description: 'repo'
         required: true
-        default: 'develop'
+        default: 'kuberry/spack'
+      ref:
+        description: 'ref'
+        required: true
+        default: 'refs/heads/develop'
         
 jobs:
   build:
@@ -19,7 +23,8 @@ jobs:
     steps:
     - uses: actions/checkout@v2
       with:
-        ref: ${{ github.event.inputs.branch }}
+        name: ${{ github.event.inputs.repo }}
+        ref: ${{ github.event.inputs.ref }}
     
     - name: Setup python
       uses: actions/setup-python@v2
