@@ -23,7 +23,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
       with:
-        name: ${{ github.event.inputs.repo }}
+        repository: ${{ github.event.inputs.repo }}
         ref: ${{ github.event.inputs.ref }}
     
     - name: Setup python
