@@ -3,14 +3,10 @@ name: build tests
 on: 
   workflow_dispatch:
     inputs:
-      repo:
-        description: 'repo'
+      userbranch:
+        description: 'username:branchname'
         required: true
-        default: 'kuberry/spack'
-      ref:
-        description: 'ref'
-        required: true
-        default: 'refs/heads/develop'
+        default: 'kuberry:develop'
         
 jobs:
   build:
@@ -21,10 +17,17 @@ jobs:
         os: ['ubuntu-latest', 'macos-latest']
         
     steps:
+    - id: get-branch-ref
+      run: |
+        user=$(echo ${{ github.event.inputs.userbranch }} | cut -d: -f1)
+        branch=$(echo ${{ github.event.inputs.userbranch }} | cut -d: -f2)
+        echo "::set-output name=user::$user"
+        echo "::set-output name=branch::$branch"
+    
     - uses: actions/checkout@v2
       with:
-        repository: ${{ github.event.inputs.repo }}
-        ref: ${{ github.event.inputs.ref }}
+        repository: ${{steps.get-branch-ref.outputs.user}}/spack
+        ref: refs/heads/${{steps.get-branch-ref.outputs.branch}}
     
     - name: Setup python
       uses: actions/setup-python@v2
