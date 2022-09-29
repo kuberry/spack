@@ -86,25 +86,26 @@ class Xyce(CMakePackage):
     # installation of many more packages than are needed for Xyce.
     depends_on("trilinos~float~ifpack2~ml~muelu~zoltan2")
 
+    # handles dynamic library symbol conflicts with pip installed numpy and other
+    # python packages
+    depends_on("openblas~shared", when="+pymi~shared")
+
     def cmake_args(self):
         spec = self.spec
+        cxxflags = spec.compiler_flags["cxxflags"]
 
         trilinos = spec["trilinos"]
-
-        cxx_flags = [self.compiler.cxx_pic_flag]
-        try:
-            cxx_flags.append(self.compiler.cxx11_flag)
-        except ValueError:
-            pass
-        cxx_flags.append("-DXyce_INTRUSIVE_PCE -Wreorder -O3")
 
         options = []
         options.extend(
             [
                 "-DTrilinos_DIR:PATH={0}".format(trilinos.prefix),
-                "-DCMAKE_CXX_FLAGS:STRING={0}".format(" ".join(cxx_flags)),
+                "-DCMAKE_CXX_FLAGS:STRING={0}".format(" ".join(cxxflags))
             ]
         )
+
+        build_type = spec.variants["build_type"].value
+        options.extend(["-DCMAKE_BUILD_TYPE:STRING={0}".format(build_type)])
 
         if "+mpi" in spec:
             options.append("-DCMAKE_CXX_COMPILER:STRING={0}".format(spec["mpi"].mpicxx))
@@ -124,3 +125,9 @@ class Xyce(CMakePackage):
             options.append("-DPython_FIND_STRATEGY=LOCATION")
 
         return options
+
+    def flag_handler(self, name, flags):
+        spec = self.spec
+        if name == "cxxflags":
+            flags.append("-DXyce_INTRUSIVE_PCE -Wreorder")
+        return (flags, None, None)
