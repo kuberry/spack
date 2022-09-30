@@ -59,6 +59,12 @@ class Xyce(CMakePackage):
     variant("cxxstd", default="11", values=cxxstd_choices, multi=False)
 
     variant("pymi", default=False, description="Enable Python Model Interpreter for Xyce")
+    # Downstream dynamic library symbols from pip installed numpy and other
+    # pip installed python packages can cause conflicts. This is most often
+    # seen with blas symbols from numpy, and building blas static resolves
+    # this issue.
+    variant("pymi_static_blas", default=True, sticky=True, description="Require static blas build for PyMi")
+
     depends_on("python@3:", type=("build", "link", "run"), when="+pymi")
     depends_on("py-pip", type="run", when="+pymi")
     depends_on("py-pybind11@2.6.1:", type=("build", "link"), when="+pymi")
@@ -86,9 +92,30 @@ class Xyce(CMakePackage):
     # installation of many more packages than are needed for Xyce.
     depends_on("trilinos~float~ifpack2~ml~muelu~zoltan2")
 
-    # handles dynamic library symbol conflicts with pip installed numpy and other
-    # python packages
-    depends_on("openblas~shared", when="+pymi~shared")
+    # Issue #1712 forces explicitly enumerating blas packages to propagate variants
+    with when("+pymi+pymi_static_blas"):
+
+        # BLAS
+        depends_on("openblas~shared", when="^openblas") # *
+        depends_on("netlib-lapack~shared", when="^netlib-lapack~external-blas") # *
+
+        depends_on("armpl-gcc~shared", when="^armpl-gcc") #gcc only
+        depends_on("atlas~shared", when="^atlas")
+        depends_on("blis libs=static", when="^blis+cblas")
+        depends_on("blis libs=static", when="^blis+blas")
+        depends_on("clblast~shared", when="^clblast+netlib")
+        depends_on("intel-mkl~shared", when="^intel-mkl")
+        depends_on("intel-oneapi-mkl~shared", when="^intel-oneapi-mkl")
+        depends_on("intel-parallel-studio~shared", when="^intel-parallel-studio+mkl")
+        depends_on("veclibfort~shared", when="^veclibfort")
+        conflicts("^essl", msg="essl not supported with +pymi_static_blas")
+        conflicts("^flexiblas", msg="flexiblas not supported with +pymi_static_blas")
+        conflicts("^nvhpc", msg="nvhpc not supported with +pymi_static_blas")
+        conflicts("^cray-libsci", msg="cray-libsci not supported with +pymi_static_blas")
+        # netlib-xblas+plain_blas is always static
+
+        # HDF5
+        depends_on("hdf5~shared", when="^hdf5")
 
     def cmake_args(self):
         spec = self.spec
