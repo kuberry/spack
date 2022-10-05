@@ -74,10 +74,12 @@ class Xyce(CMakePackage):
     depends_on(
         "trilinos"
         "+amesos+amesos2+anasazi+aztec+basker+belos+complex+epetra+epetraext"
-        "+explicit_template_instantiation+fortran+ifpack+isorropia+kokkos+nox"
-        "+sacado+suite-sparse+trilinoscouplings+zoltan+stokhos+epetraextbtf"
+        "+explicit_template_instantiation+fortran+ifpack+kokkos+nox"
+        "+sacado+suite-sparse+trilinoscouplings+stokhos+epetraextbtf"
         "+epetraextexperimental+epetraextgraphreorderings"
     )
+    depends_on("trilinos+isorropia+zoltan", when="+mpi")
+
     # tested versions of Trilinos for everything up to 7.4.0
     depends_on("trilinos@12.12.1:13.4", when="@:7.5")
     depends_on("trilinos@13.5.0:develop", when="@7.6.0:master")
