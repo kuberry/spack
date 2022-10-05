@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
+
 from spack.package import *
 
 
@@ -119,17 +121,11 @@ class Xyce(CMakePackage):
 
     def cmake_args(self):
         spec = self.spec
-        cxxflags = spec.compiler_flags["cxxflags"]
-
-        trilinos = spec["trilinos"]
 
         options = []
-        options.extend(
-            [
-                "-DTrilinos_DIR:PATH={0}".format(trilinos.prefix),
-                "-DCMAKE_CXX_FLAGS:STRING={0}".format(" ".join(cxxflags))
-            ]
-        )
+
+        trilinos = spec["trilinos"]
+        options.append("-DTrilinos_DIR:PATH={0}".format(trilinos.prefix))
 
         build_type = spec.variants["build_type"].value
         options.extend(["-DCMAKE_BUILD_TYPE:STRING={0}".format(build_type)])
@@ -151,34 +147,23 @@ class Xyce(CMakePackage):
             options.append("-DPython_ROOT_DIR:FILEPATH={0}".format(python.prefix))
             options.append("-DPython_FIND_STRATEGY=LOCATION")
 
-        # Fortran lib (assumes clang is built with gfortran!)
-        if "trilinos~shared" in spec and spec.compiler.name in ["gcc", "clang", "apple-clang"]:
-            import os
-            fc = Executable(spec["mpi"].mpifc) if ("+mpi" in spec) else Executable(spack_fc)
-            libgfortran = fc("--print-file-name", "libgfortran." + dso_suffix, output=str).strip()
-            # if libgfortran is equal to "libgfortran.<dso_suffix>" then
-            # print-file-name failed, use static library instead
-            if libgfortran == "libgfortran." + dso_suffix:
-                libgfortran = fc("--print-file-name", "libgfortran.a", output=str).strip()
-            # -L<libdir> -lgfortran required for OSX
-            # https://github.com/spack/spack/pull/25823#issuecomment-917231118
-            ldflags = spec.compiler_flags["ldflags"]
-            print("LDFLAGS: ", str(ldflags))
-            if "-L{0}".format(os.path.dirname(libgfortran)) not in ldflags:
-                ldflags.append("-L{0}".format(os.path.dirname(libgfortran)))
-            if "-lgfortran" not in ldflags:
-                ldflags.append("-lgfortran")
-            print("LDFLAGS2: ", str(ldflags))
-            options.extend(
-                [
-                    "-DCMAKE_EXE_LINKER_FLAGS:STRING={0}".format(" ".join(ldflags))
-                ]
-            )
-
         return options
 
     def flag_handler(self, name, flags):
         spec = self.spec
         if name == "cxxflags":
             flags.append("-DXyce_INTRUSIVE_PCE -Wreorder")
+        elif name == "ldflags":
+            # Fortran lib (assumes clang is built with gfortran!)
+            if spec.compiler.name in ["gcc", "clang", "apple-clang"]:
+                fc = Executable(self.compiler.fc)
+                libgfortran = fc("--print-file-name", "libgfortran." + dso_suffix, output=str).strip()
+                # if libgfortran is equal to "libgfortran.<dso_suffix>" then
+                # print-file-name failed, use static library instead
+                if libgfortran == "libgfortran." + dso_suffix:
+                    libgfortran = fc("--print-file-name", "libgfortran.a", output=str).strip()
+                # -L<libdir> -lgfortran required for OSX
+                # https://github.com/spack/spack/pull/25823#issuecomment-917231118
+                flags.append("-L{0} -lgfortran".format(os.path.dirname(libgfortran)))
+
         return (flags, None, None)
