@@ -30,7 +30,7 @@ for package in root:
             #spack_var_str += "variant('" + package.get("name").lower() + "', default=False)\n"
             #spack_disable_var_str += "variant('disable_" + package.get("name").lower() + "', default=False, sticky=True)\n"
             #spack_disable_var_str += "conflicts('+" + package.get("name").lower() + "', when='+disable_" + package.get("name").lower() + "')\n"
-            spack_disable_var_str += "variant('disable_" + package.get("name").lower() + "', default=False, sticky=True, when='+explicit_disable+" + package.get("name").lower() + "')\n"
+            spack_disable_var_str += "variant('disable_" + package.get("name").lower() + "', default=False, sticky=True, when='+explicit_disable+disable_" + package.get("name").lower() + "')\n"
         spack_var_str += "variant('" + package.get("name").lower() + "', default=False)\n"
         spack_disable_var_str += "conflicts('+" + package.get("name").lower() + "', when='+disable_" + package.get("name").lower() + "')\n"
 
