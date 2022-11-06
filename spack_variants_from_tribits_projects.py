@@ -23,14 +23,18 @@ for package in root:
         if (parent.get("value")==""):
             parent_package_variants.append(package.get("name"))
             spack_noncond_var_str += "variant('" + package.get("name").lower() + "', default=False)\n"
+            #spack_disable_var_str += "variant('" + package.get("name").lower() + "_oe', default=True, when='+" + package.get("name").lower() + "+oe')\n"
+            #spack_disable_var_str += "variant('" + package.get("name").lower() + "_oe', default=True, when='+oe')\n"
             spack_disable_var_str += "variant('disable_" + package.get("name").lower() + "', default=False, sticky=True, when='+explicit_disable')\n"
         else:
             nonparent_package_variants.append(package.get("name"))
-            spack_cond_var_str += "variant('" + package.get("name").lower() + "', default=False, when='+" + parent.get("value").lower() + "')\n"
-            #spack_var_str += "variant('" + package.get("name").lower() + "', default=False)\n"
-            #spack_disable_var_str += "variant('disable_" + package.get("name").lower() + "', default=False, sticky=True)\n"
-            #spack_disable_var_str += "conflicts('+" + package.get("name").lower() + "', when='+disable_" + package.get("name").lower() + "')\n"
-            spack_disable_var_str += "variant('disable_" + package.get("name").lower() + "', default=False, sticky=True, when='+explicit_disable+disable_" + package.get("name").lower() + "')\n"
+            spack_cond_var_str += "variant('" + package.get("name").lower() + "', default=False)\n"
+            #spack_cond_var_str += "variant('" + package.get("name").lower() + "', default=False, when='+" + parent.get("value").lower() + "')\n"
+            #spack_disable_var_str += "variant('" + package.get("name").lower() + "_oe', default=True, when='+" + parent.get("value").lower() + "+oe')\n"
+            #spack_disable_var_str += "variant('" + package.get("name").lower() + "_oe', default=True, when='+oe')\n"
+            #spack_disable_var_str += "variant('" + package.get("name").lower() + "_oe', default=True, when='+" + package.get("name").lower() + "+" + parent.get("value").lower() + "_oe+oe')\n"
+            #spack_disable_var_str += "variant('disable_" + package.get("name").lower() + "', default=False, sticky=True, when='+explicit_disable+disable_" + parent.get("name").lower() + "')\n"
+            spack_disable_var_str += "variant('disable_" + package.get("name").lower() + "', default=False, sticky=True, when='+explicit_disable+disable_" + parent.get("value").lower() + "')\n"
         spack_var_str += "variant('" + package.get("name").lower() + "', default=False)\n"
         spack_disable_var_str += "conflicts('+" + package.get("name").lower() + "', when='+disable_" + package.get("name").lower() + "')\n"
 
@@ -39,6 +43,106 @@ print(spack_cond_var_str.replace("aztecoo","aztec"))
 #print(spack_var_str)
 print(spack_disable_var_str.replace("aztecoo","aztec"))
 #print(spack_cond_var_str)
+
+
+# create all package dependencies
+spack_req_dep_str = str()
+for pkg in root:
+    if pkg.get("type")!="EX":
+        fields_to_append = ("LIB_REQUIRED_DEP_PACKAGES", "TEST_REQUIRED_DEP_PACKAGES")
+        for field in fields_to_append:
+            req_pkgs = pkg.find(field)
+            if req_pkgs.get("value")!=None:
+                for req_pkg in req_pkgs.get("value").split(","):
+                    for pkg2 in root:
+                        if pkg2.get("name")==req_pkg and pkg2.get("type")!="EX":
+                            spack_req_dep_str += "conflicts('~" + req_pkg.lower() + "', when='+" + pkg.get("name").lower() + "')\n"
+                            req_parent_pkg = pkg2.find("ParentPackage")
+                            if (req_parent_pkg.get("value")!=""):
+                                spack_req_dep_str += "conflicts('~" + req_parent_pkg.get("value").lower() + "', when='+" + pkg.get("name").lower() + "')\n"
+                            break
+        #fields_to_append = ("LIB_OPTIONAL_DEP_PACKAGES", "TEST_OPTIONAL_DEP_PACKAGES")
+        #for field in fields_to_append:
+        #    req_pkgs = pkg.find(field)
+        #    if req_pkgs.get("value")!=None:
+        #        for req_pkg in req_pkgs.get("value").split(","):
+        #            for pkg2 in root:
+        #                if pkg2.get("name")==req_pkg and pkg2.get("type")!="EX":
+        #                    spack_dep_str += "with when('+explicit_disable'):\n"
+        #                    spack_dep_str += "    conflicts('~" + req_pkg.lower() + "', when='+" + pkg.get("name").lower() + "~disable_" + req_pkg.lower() + "')\n"
+        #                    spack_dep_str += "with when('~explicit_disable'):\n"
+        #                    spack_dep_str += "    conflicts('~" + req_pkg.lower() + "', when='+" + pkg.get("name").lower() + "')\n"
+        #                    break
+        #pp = pkg.find("ParentPackage")
+        #if pp.get("value")!="":
+        #    spack_dep_str += "conflicts('~" + pp.get("value").lower() + "', when='+" + pkg.get("name").lower() + "')\n"
+print(spack_req_dep_str.replace("aztecoo","aztec"))
+
+# create all package dependencies
+spack_opt_dep_str = str()
+spack_opt_alt_dep_str = str()
+for pkg in root:
+    if pkg.get("type")!="EX":
+        fields_to_append = ("LIB_OPTIONAL_DEP_PACKAGES", "TEST_OPTIONAL_DEP_PACKAGES")
+        for field in fields_to_append:
+            req_pkgs = pkg.find(field)
+            if req_pkgs.get("value")!=None:
+                for req_pkg in req_pkgs.get("value").split(","):
+                    for pkg2 in root:
+                        if pkg2.get("name")==req_pkg and pkg2.get("type")!="EX":
+                             
+                            #spack_dep_str += "with when('+explicit_disable'):\n"
+                            spack_opt_dep_str += "    conflicts('~" + req_pkg.lower() + "', when='+" + pkg.get("name").lower() + "~disable_" + req_pkg.lower() + "')\n"
+                            #spack_dep_str += "with when('~explicit_disable'):\n"
+                            spack_opt_alt_dep_str += "    conflicts('~" + req_pkg.lower() + "', when='+" + pkg.get("name").lower() + "')\n"
+                            break
+
+print("with when('+oe+explicit_disable'):\n")
+print(spack_opt_dep_str.replace("aztecoo","aztec"))
+print("with when('+oe~explicit_disable'):\n")
+print(spack_opt_alt_dep_str.replace("aztecoo","aztec"))
+
+# example: +tpetra turns on +tpetracore (and all other subpackages) but +tpetra doesn't require +tpetra be turned on
+# create all package dependencies
+spack_parent_dep_str = str()
+for pkg in root:
+    if pkg.get("type")!="EX":
+        pp = pkg.find("ParentPackage")
+        if pp.get("value")!="":
+            spack_parent_dep_str += "conflicts('~" + pkg.get("name").lower() + "', when='+" + pp.get("value").lower() + "')\n"
+print(spack_parent_dep_str)
+
+# create all TPL requirements
+spack_tpl_dep_str = str()
+auto_on_tpls = ("blas", "lapack")
+for pkg in root:
+    if pkg.get("type")!="EX":
+        fields_to_append = ("LIB_REQUIRED_DEP_TPLS",)
+        for field in fields_to_append:
+            req_pkgs = pkg.find(field)
+            if req_pkgs.get("value")!=None:
+                for req_pkg in req_pkgs.get("value").split(","):
+                    if req_pkg.lower() not in auto_on_tpls:
+                        spack_tpl_dep_str += "depends_on('+" + req_pkg.lower() + "', when='+" + pkg.get("name").lower() + "')\n"
+#print(spack_tpl_dep_str)
+
+## create all TPL requirements
+#spack_tpl_opt_dep_str = str()
+#auto_on_tpls = ("blas", "lapack")
+#for pkg in root:
+#    if pkg.get("type")!="EX":
+#        fields_to_append = ("LIB_OPTIONAL_DEP_TPLS",)
+#        for field in fields_to_append:
+#            req_pkgs = pkg.find(field)
+#            if req_pkgs.get("value")!=None:
+#                for req_pkg in req_pkgs.get("value").split(","):
+#                    if req_pkg.lower() not in auto_on_tpls:
+#                        spack_tpl_opt_dep_str += "depends_on('+" + req_pkg + "', when='+" + pkg.get("name") + "')\n"
+#print(spack_tpl_opt_dep_str)
+
+
+#print("parents:",parent_package_variants)
+#print("all:",package_variants)
 
 
 # get all dependencies and their parents
@@ -111,97 +215,3 @@ def get_deps_for_package(root, package_name):
 ##SEACASPLT
 ##Gtest
 
-# create all package dependencies
-spack_req_dep_str = str()
-for pkg in root:
-    if pkg.get("type")!="EX":
-        fields_to_append = ("LIB_REQUIRED_DEP_PACKAGES", "TEST_REQUIRED_DEP_PACKAGES")
-        for field in fields_to_append:
-            req_pkgs = pkg.find(field)
-            if req_pkgs.get("value")!=None:
-                for req_pkg in req_pkgs.get("value").split(","):
-                    for pkg2 in root:
-                        if pkg2.get("name")==req_pkg and pkg2.get("type")!="EX":
-                            spack_req_dep_str += "conflicts('~" + req_pkg.lower() + "', when='+" + pkg.get("name").lower() + "')\n"
-                            break
-        #fields_to_append = ("LIB_OPTIONAL_DEP_PACKAGES", "TEST_OPTIONAL_DEP_PACKAGES")
-        #for field in fields_to_append:
-        #    req_pkgs = pkg.find(field)
-        #    if req_pkgs.get("value")!=None:
-        #        for req_pkg in req_pkgs.get("value").split(","):
-        #            for pkg2 in root:
-        #                if pkg2.get("name")==req_pkg and pkg2.get("type")!="EX":
-        #                    spack_dep_str += "with when('+explicit_disable'):\n"
-        #                    spack_dep_str += "    conflicts('~" + req_pkg.lower() + "', when='+" + pkg.get("name").lower() + "~disable_" + req_pkg.lower() + "')\n"
-        #                    spack_dep_str += "with when('~explicit_disable'):\n"
-        #                    spack_dep_str += "    conflicts('~" + req_pkg.lower() + "', when='+" + pkg.get("name").lower() + "')\n"
-        #                    break
-        #pp = pkg.find("ParentPackage")
-        #if pp.get("value")!="":
-        #    spack_dep_str += "conflicts('~" + pp.get("value").lower() + "', when='+" + pkg.get("name").lower() + "')\n"
-print(spack_req_dep_str.replace("aztecoo","aztec"))
-
-# create all package dependencies
-spack_opt_dep_str = str()
-spack_opt_alt_dep_str = str()
-for pkg in root:
-    if pkg.get("type")!="EX":
-        fields_to_append = ("LIB_OPTIONAL_DEP_PACKAGES", "TEST_OPTIONAL_DEP_PACKAGES")
-        for field in fields_to_append:
-            req_pkgs = pkg.find(field)
-            if req_pkgs.get("value")!=None:
-                for req_pkg in req_pkgs.get("value").split(","):
-                    for pkg2 in root:
-                        if pkg2.get("name")==req_pkg and pkg2.get("type")!="EX":
-                            #spack_dep_str += "with when('+explicit_disable'):\n"
-                            spack_opt_dep_str += "    conflicts('~" + req_pkg.lower() + "', when='+" + pkg.get("name").lower() + "~disable_" + req_pkg.lower() + "')\n"
-                            #spack_dep_str += "with when('~explicit_disable'):\n"
-                            spack_opt_alt_dep_str += "    conflicts('~" + req_pkg.lower() + "', when='+" + pkg.get("name").lower() + "')\n"
-                            break
-print("with when('+explicit_disable'):\n")
-print(spack_opt_dep_str.replace("aztecoo","aztec"))
-print("with when('~explicit_disable'):\n")
-print(spack_opt_alt_dep_str.replace("aztecoo","aztec"))
-
-# create all package dependencies
-spack_parent_dep_str = str()
-for pkg in root:
-    if pkg.get("type")!="EX":
-        pp = pkg.find("ParentPackage")
-        if pp.get("value")!="":
-            spack_parent_dep_str += "conflicts('~" + pp.get("value").lower() + "', when='+" + pkg.get("name").lower() + "')\n"
-print(spack_parent_dep_str)
-
-# create all TPL requirements
-spack_tpl_dep_str = str()
-auto_on_tpls = ("blas", "lapack")
-for pkg in root:
-    if pkg.get("type")!="EX":
-        fields_to_append = ("LIB_REQUIRED_DEP_TPLS",)
-        for field in fields_to_append:
-            req_pkgs = pkg.find(field)
-            if req_pkgs.get("value")!=None:
-                for req_pkg in req_pkgs.get("value").split(","):
-                    if req_pkg.lower() not in auto_on_tpls:
-                        spack_tpl_dep_str += "depends_on('+" + req_pkg.lower() + "', when='+" + pkg.get("name").lower() + "')\n"
-#print(spack_tpl_dep_str)
-
-## create all TPL requirements
-#spack_tpl_opt_dep_str = str()
-#auto_on_tpls = ("blas", "lapack")
-#for pkg in root:
-#    if pkg.get("type")!="EX":
-#        fields_to_append = ("LIB_OPTIONAL_DEP_TPLS",)
-#        for field in fields_to_append:
-#            req_pkgs = pkg.find(field)
-#            if req_pkgs.get("value")!=None:
-#                for req_pkg in req_pkgs.get("value").split(","):
-#                    if req_pkg.lower() not in auto_on_tpls:
-#                        spack_tpl_opt_dep_str += "depends_on('+" + req_pkg + "', when='+" + pkg.get("name") + "')\n"
-#print(spack_tpl_opt_dep_str)
-
-
-#print("parents:",parent_package_variants)
-#print("all:",package_variants)
-
-# register all parent packages as variants
