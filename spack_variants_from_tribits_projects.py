@@ -85,101 +85,27 @@ spack_tpl_dep_str = str()
 auto_on_tpls = ("blas", "lapack")
 for pkg in root:
     if pkg.get("type")!="EX":
-        fields_to_append = ("LIB_REQUIRED_DEP_TPLS",)
+        fields_to_append = ("LIB_REQUIRED_DEP_TPLS", "TEST_REQUIRED_DEP_TPLS")
         for field in fields_to_append:
             req_pkgs = pkg.find(field)
             if req_pkgs.get("value")!=None:
                 for req_pkg in req_pkgs.get("value").split(","):
                     if req_pkg.lower() not in auto_on_tpls:
                         spack_tpl_dep_str += "depends_on('+" + req_pkg.lower() + "', when='+" + pkg.get("name").lower() + "')\n"
-#print(spack_tpl_dep_str)
+#print("# register required package TPL dependencies")
+#print(spack_tpl_dep_str.replace("aztecoo","aztec").replace("netcdf","netcdf-c"))
 
 ## create all TPL requirements
 #spack_tpl_opt_dep_str = str()
 #auto_on_tpls = ("blas", "lapack")
 #for pkg in root:
 #    if pkg.get("type")!="EX":
-#        fields_to_append = ("LIB_OPTIONAL_DEP_TPLS",)
+#        fields_to_append = ("LIB_REQUIRED_DEP_TPLS", "TEST_REQUIRED_DEP_TPLS")
 #        for field in fields_to_append:
 #            req_pkgs = pkg.find(field)
 #            if req_pkgs.get("value")!=None:
 #                for req_pkg in req_pkgs.get("value").split(","):
 #                    if req_pkg.lower() not in auto_on_tpls:
 #                        spack_tpl_opt_dep_str += "depends_on('+" + req_pkg + "', when='+" + pkg.get("name") + "')\n"
+#print("# register OPTIONAL package TPL dependencies")
 #print(spack_tpl_opt_dep_str)
-
-
-#print("parents:",parent_package_variants)
-#print("all:",package_variants)
-
-
-## get all dependencies and their parents
-#def get_deps_for_package(root, package_name):
-#    # build up all optional dependencies
-#    def get_down_deps_for_package(root, package_name):
-#    
-#        deps = set()
-#        package = None
-#        for pkg in root:
-#            if pkg.get("name").lower()==package_name.lower() and pkg.get("type")!="EX":
-#                package = pkg
-#                break
-#            elif pkg.get("name").lower()==package_name.lower():
-#                return deps
-#        assert package is not None, "Package {0} not found".format(package_name)
-#    
-#        fields_to_append = ("LIB_REQUIRED_DEP_PACKAGES", "LIB_OPTIONAL_DEP_PACKAGES", "TEST_REQUIRED_DEP_PACKAGES", "TEST_OPTIONAL_DEP_PACKAGES")
-#        for field in fields_to_append:
-#            req_pkgs = package.find(field)
-#            if req_pkgs.get("value")!=None:
-#                for req_pkg in req_pkgs.get("value").split(","):
-#                    deps |= get_down_deps_for_package(root, req_pkg)
-#    
-#        return set([package_name,]) | deps
-#    
-#    # get parents and parents of parents of all dependencies
-#    def get_up_deps_for_package(root, dep_set):
-#        new_dep_set = set()
-#        for dep in dep_set:
-#            package = None
-#            for pkg in root:
-#                if pkg.get("name").lower()==dep.lower() and pkg.get("type")!="EX":
-#                    package = pkg
-#                    break
-#                elif pkg.get("name").lower()==dep.lower():
-#                    return deps
-#            assert package is not None, "Package {0} not found".format(dep)
-#            pp = package.find("ParentPackage")
-#            if pp.get("value")!="":
-#                if pp.get("value") not in dep_set:
-#                    new_dep_set |= get_up_deps_for_package(root, set([pp.get("value"),]))
-#        return new_dep_set | dep_set
-#
-#    dep_set = get_down_deps_for_package(root, package_name)
-#    dep_set = get_up_deps_for_package(root, dep_set)
-#    return dep_set
-#
-## get list of all packages enabled by turning on a package
-## ST only used if -D Trilinos_SECONDARY_TESTED_CODE:BOOL=ON
-## EX never counted
-#dep_set = get_deps_for_package(root, "MueLu")
-#print(len(dep_set), dep_set)
-#t=set(["KokkosCore","KokkosContainers","KokkosAlgorithms","Kokkos","TeuchosCore","TeuchosParser","TeuchosParameterList","TeuchosComm","TeuchosNumerics","TeuchosRemainder","TeuchosKokkosCompat","TeuchosKokkosComm","Teuchos","KokkosKernels","RTOp","Sacado","Epetra","Zoltan","Shards","Triutils","EpetraExt","TpetraTSQR","TpetraCore","Tpetra","TrilinosSS","ThyraCore","ThyraEpetraAdapters","ThyraEpetraExtAdapters","ThyraTpetraAdapters","Thyra","Xpetra","Isorropia","AztecOO","Galeri","Amesos","Pamgen","Zoltan2Core","Ifpack","ML","Belos","ShyLU_NodeHTS","ShyLU_NodeTacho","ShyLU_Node","Amesos2","Anasazi","Ifpack2","Stratimikos","Teko","Intrepid2","MueLu"])
-#print(len(t), t)
-#print("dep-t", dep_set - t)
-#print("t-dep", t-dep_set)
-
-
-## check if all required dependencies are in ...
-#for package in root:
-#    req_pkgs = package.find("LIB_REQUIRED_DEP_PACKAGES")
-#    if req_pkgs.get("value")!=None:
-#        for req_pkg in req_pkgs.get("value").split(","):
-#            #print(package.get("name"), req_pkg, req_pkg in parent_package_variants)
-#            if req_pkg not in package_variants:
-#                print(package.get("name"), req_pkg, req_pkg in package_variants)
-## every required package is in the existing list of PT packages except for:
-##SEACASSVDI
-##SEACASPLT
-##Gtest
-
