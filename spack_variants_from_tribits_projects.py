@@ -22,27 +22,27 @@ for package in root:
         all_package_variants.append(package.get("name"))
         if (parent.get("value")==""):
             parent_package_variants.append(package.get("name"))
-            spack_noncond_var_str += "variant('" + package.get("name").lower() + "', default=False)\n"
-            #spack_disable_var_str += "variant('" + package.get("name").lower() + "_oe', default=True, when='+" + package.get("name").lower() + "+oe')\n"
-            #spack_disable_var_str += "variant('" + package.get("name").lower() + "_oe', default=True, when='+oe')\n"
-            spack_disable_var_str += "variant('disable_" + package.get("name").lower() + "', default=False, sticky=True, when='+explicit_disable')\n"
+            spack_noncond_var_str += "variant('" + package.get("name").lower() + "', default=False, description='Enable Trilinos package " + package.get("name") + "')\n"
         else:
             nonparent_package_variants.append(package.get("name"))
-            spack_cond_var_str += "variant('" + package.get("name").lower() + "', default=False)\n"
-            #spack_cond_var_str += "variant('" + package.get("name").lower() + "', default=False, when='+" + parent.get("value").lower() + "')\n"
-            #spack_disable_var_str += "variant('" + package.get("name").lower() + "_oe', default=True, when='+" + parent.get("value").lower() + "+oe')\n"
-            #spack_disable_var_str += "variant('" + package.get("name").lower() + "_oe', default=True, when='+oe')\n"
-            #spack_disable_var_str += "variant('" + package.get("name").lower() + "_oe', default=True, when='+" + package.get("name").lower() + "+" + parent.get("value").lower() + "_oe+oe')\n"
-            #spack_disable_var_str += "variant('disable_" + package.get("name").lower() + "', default=False, sticky=True, when='+explicit_disable+disable_" + parent.get("name").lower() + "')\n"
-            spack_disable_var_str += "variant('disable_" + package.get("name").lower() + "', default=False, sticky=True, when='+explicit_disable+disable_" + parent.get("value").lower() + "')\n"
+            spack_cond_var_str += "variant('" + package.get("name").lower() + "', default=False, description='Enable Trilinos subpackage " + package.get("name") + "')\n"
         spack_var_str += "variant('" + package.get("name").lower() + "', default=False)\n"
-        spack_disable_var_str += "conflicts('+" + package.get("name").lower() + "', when='+disable_" + package.get("name").lower() + "')\n"
 
+print("# Trilinos parent packages")
 print(spack_noncond_var_str.replace("aztecoo","aztec"))
+print("# Trilinos subpackages")
 print(spack_cond_var_str.replace("aztecoo","aztec"))
-#print(spack_var_str)
-print(spack_disable_var_str.replace("aztecoo","aztec"))
-#print(spack_cond_var_str)
+
+# example: +tpetra turns on +tpetracore (and all other subpackages) but +tpetra doesn't require +tpetra be turned on
+# create all package dependencies
+spack_parent_dep_str = str()
+for pkg in root:
+    if pkg.get("type")!="EX":
+        pp = pkg.find("ParentPackage")
+        if pp.get("value")!="":
+            spack_parent_dep_str += "conflicts('~" + pkg.get("name").lower() + "', when='+" + pp.get("value").lower() + "')\n"
+print("# parent packages (if enabled) enable all subpackages")
+print(spack_parent_dep_str.replace("aztecoo","aztec"))
 
 
 # create all package dependencies
@@ -57,25 +57,8 @@ for pkg in root:
                     for pkg2 in root:
                         if pkg2.get("name")==req_pkg and pkg2.get("type")!="EX":
                             spack_req_dep_str += "conflicts('~" + req_pkg.lower() + "', when='+" + pkg.get("name").lower() + "')\n"
-                            req_parent_pkg = pkg2.find("ParentPackage")
-                            if (req_parent_pkg.get("value")!=""):
-                                spack_req_dep_str += "conflicts('~" + req_parent_pkg.get("value").lower() + "', when='+" + pkg.get("name").lower() + "')\n"
                             break
-        #fields_to_append = ("LIB_OPTIONAL_DEP_PACKAGES", "TEST_OPTIONAL_DEP_PACKAGES")
-        #for field in fields_to_append:
-        #    req_pkgs = pkg.find(field)
-        #    if req_pkgs.get("value")!=None:
-        #        for req_pkg in req_pkgs.get("value").split(","):
-        #            for pkg2 in root:
-        #                if pkg2.get("name")==req_pkg and pkg2.get("type")!="EX":
-        #                    spack_dep_str += "with when('+explicit_disable'):\n"
-        #                    spack_dep_str += "    conflicts('~" + req_pkg.lower() + "', when='+" + pkg.get("name").lower() + "~disable_" + req_pkg.lower() + "')\n"
-        #                    spack_dep_str += "with when('~explicit_disable'):\n"
-        #                    spack_dep_str += "    conflicts('~" + req_pkg.lower() + "', when='+" + pkg.get("name").lower() + "')\n"
-        #                    break
-        #pp = pkg.find("ParentPackage")
-        #if pp.get("value")!="":
-        #    spack_dep_str += "conflicts('~" + pp.get("value").lower() + "', when='+" + pkg.get("name").lower() + "')\n"
+print("# register required package dependencies")
 print(spack_req_dep_str.replace("aztecoo","aztec"))
 
 # create all package dependencies
@@ -90,27 +73,12 @@ for pkg in root:
                 for req_pkg in req_pkgs.get("value").split(","):
                     for pkg2 in root:
                         if pkg2.get("name")==req_pkg and pkg2.get("type")!="EX":
-                             
-                            #spack_dep_str += "with when('+explicit_disable'):\n"
-                            spack_opt_dep_str += "    conflicts('~" + req_pkg.lower() + "', when='+" + pkg.get("name").lower() + "~disable_" + req_pkg.lower() + "')\n"
-                            #spack_dep_str += "with when('~explicit_disable'):\n"
                             spack_opt_alt_dep_str += "    conflicts('~" + req_pkg.lower() + "', when='+" + pkg.get("name").lower() + "')\n"
                             break
 
-print("with when('+oe+explicit_disable'):\n")
-print(spack_opt_dep_str.replace("aztecoo","aztec"))
-print("with when('+oe~explicit_disable'):\n")
+print("# register OPTIONAL package dependencies")
+print("with when('+all_optional_packages'):\n")
 print(spack_opt_alt_dep_str.replace("aztecoo","aztec"))
-
-# example: +tpetra turns on +tpetracore (and all other subpackages) but +tpetra doesn't require +tpetra be turned on
-# create all package dependencies
-spack_parent_dep_str = str()
-for pkg in root:
-    if pkg.get("type")!="EX":
-        pp = pkg.find("ParentPackage")
-        if pp.get("value")!="":
-            spack_parent_dep_str += "conflicts('~" + pkg.get("name").lower() + "', when='+" + pp.get("value").lower() + "')\n"
-print(spack_parent_dep_str)
 
 # create all TPL requirements
 spack_tpl_dep_str = str()
@@ -145,52 +113,52 @@ for pkg in root:
 #print("all:",package_variants)
 
 
-# get all dependencies and their parents
-def get_deps_for_package(root, package_name):
-    # build up all optional dependencies
-    def get_down_deps_for_package(root, package_name):
-    
-        deps = set()
-        package = None
-        for pkg in root:
-            if pkg.get("name").lower()==package_name.lower() and pkg.get("type")!="EX":
-                package = pkg
-                break
-            elif pkg.get("name").lower()==package_name.lower():
-                return deps
-        assert package is not None, "Package {0} not found".format(package_name)
-    
-        fields_to_append = ("LIB_REQUIRED_DEP_PACKAGES", "LIB_OPTIONAL_DEP_PACKAGES", "TEST_REQUIRED_DEP_PACKAGES", "TEST_OPTIONAL_DEP_PACKAGES")
-        for field in fields_to_append:
-            req_pkgs = package.find(field)
-            if req_pkgs.get("value")!=None:
-                for req_pkg in req_pkgs.get("value").split(","):
-                    deps |= get_down_deps_for_package(root, req_pkg)
-    
-        return set([package_name,]) | deps
-    
-    # get parents and parents of parents of all dependencies
-    def get_up_deps_for_package(root, dep_set):
-        new_dep_set = set()
-        for dep in dep_set:
-            package = None
-            for pkg in root:
-                if pkg.get("name").lower()==dep.lower() and pkg.get("type")!="EX":
-                    package = pkg
-                    break
-                elif pkg.get("name").lower()==dep.lower():
-                    return deps
-            assert package is not None, "Package {0} not found".format(dep)
-            pp = package.find("ParentPackage")
-            if pp.get("value")!="":
-                if pp.get("value") not in dep_set:
-                    new_dep_set |= get_up_deps_for_package(root, set([pp.get("value"),]))
-        return new_dep_set | dep_set
-
-    dep_set = get_down_deps_for_package(root, package_name)
-    dep_set = get_up_deps_for_package(root, dep_set)
-    return dep_set
-
+## get all dependencies and their parents
+#def get_deps_for_package(root, package_name):
+#    # build up all optional dependencies
+#    def get_down_deps_for_package(root, package_name):
+#    
+#        deps = set()
+#        package = None
+#        for pkg in root:
+#            if pkg.get("name").lower()==package_name.lower() and pkg.get("type")!="EX":
+#                package = pkg
+#                break
+#            elif pkg.get("name").lower()==package_name.lower():
+#                return deps
+#        assert package is not None, "Package {0} not found".format(package_name)
+#    
+#        fields_to_append = ("LIB_REQUIRED_DEP_PACKAGES", "LIB_OPTIONAL_DEP_PACKAGES", "TEST_REQUIRED_DEP_PACKAGES", "TEST_OPTIONAL_DEP_PACKAGES")
+#        for field in fields_to_append:
+#            req_pkgs = package.find(field)
+#            if req_pkgs.get("value")!=None:
+#                for req_pkg in req_pkgs.get("value").split(","):
+#                    deps |= get_down_deps_for_package(root, req_pkg)
+#    
+#        return set([package_name,]) | deps
+#    
+#    # get parents and parents of parents of all dependencies
+#    def get_up_deps_for_package(root, dep_set):
+#        new_dep_set = set()
+#        for dep in dep_set:
+#            package = None
+#            for pkg in root:
+#                if pkg.get("name").lower()==dep.lower() and pkg.get("type")!="EX":
+#                    package = pkg
+#                    break
+#                elif pkg.get("name").lower()==dep.lower():
+#                    return deps
+#            assert package is not None, "Package {0} not found".format(dep)
+#            pp = package.find("ParentPackage")
+#            if pp.get("value")!="":
+#                if pp.get("value") not in dep_set:
+#                    new_dep_set |= get_up_deps_for_package(root, set([pp.get("value"),]))
+#        return new_dep_set | dep_set
+#
+#    dep_set = get_down_deps_for_package(root, package_name)
+#    dep_set = get_up_deps_for_package(root, dep_set)
+#    return dep_set
+#
 ## get list of all packages enabled by turning on a package
 ## ST only used if -D Trilinos_SECONDARY_TESTED_CODE:BOOL=ON
 ## EX never counted
