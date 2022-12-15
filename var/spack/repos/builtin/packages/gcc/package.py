@@ -736,7 +736,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         if self.version >= Version("6"):
             options.append("--with-system-zlib")
 
-        if "zstd" in spec:
+        if "+zstd" in spec:
             options.append("--with-zstd-include={0}".format(spec["zstd"].headers.directories[0]))
             options.append("--with-zstd-lib={0}".format(spec["zstd"].libs.directories[0]))
 
