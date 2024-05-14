@@ -62,6 +62,7 @@ class Gettext(AutotoolsPackage, GNUMirrorPackage):
     # depends_on('cvs')
 
     conflicts("+shared~pic")
+    conflicts("%gcc@:4", when="@0.22.5:")
 
     patch("test-verify-parallel-make-check.patch", when="@:0.19.8.1")
     patch("nvhpc-builtin.patch", when="@:0.21.0 %nvhpc")
