@@ -101,7 +101,9 @@ class Xyce(CMakePackage):
 
     depends_on("python@3:", type=("build", "link", "run"), when="+pymi")
     depends_on("py-pip", type="run", when="+pymi")
-    depends_on("py-pybind11@2.6.1:", type=("build", "link"), when="+pymi")
+    depends_on("py-pybind11@2.6.1:", type=("build", "link"), when="@:7.8 +pymi")
+    depends_on("py-pybind11@2.13.6:", type=("build", "link"), when="@7.9: +pymi")
+    depends_on("python-venv", when="+pymi")
 
     depends_on(
         "trilinos"
@@ -112,11 +114,11 @@ class Xyce(CMakePackage):
     depends_on("trilinos+isorropia+zoltan", when="+mpi")
 
     # Currently supported versions of Xyce
-    depends_on("trilinos@15.0.0:develop", when="@7.8.0:")
+    depends_on("trilinos@15.0.0:develop", when="@7.9.0:")
     depends_on("trilinos+rol", when="@7.7.0:")
 
     # tested versions of Trilinos against older versions of Xyce
-    depends_on("trilinos@13.5.0:14.4", when="@7.6.0:7.7.0")
+    depends_on("trilinos@13.5.0:14.4", when="@7.6.0:7.8")
     depends_on("trilinos@12.12.1:13.4", when="@7.5")
     depends_on("trilinos@12.12.1", when="@:7.4")
     requires("^trilinos gotype=all cxxstd=11", when="^trilinos@:12.15")
